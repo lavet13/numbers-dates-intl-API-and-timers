@@ -16,14 +16,14 @@ const account1 = {
   pin: 1111,
 
   movementsDates: [
-    '2019-11-18T21:31:17.178Z',
-    '2019-12-23T07:42:02.383Z',
-    '2020-01-28T09:15:04.904Z',
-    '2020-04-01T10:17:24.185Z',
-    '2020-05-08T14:11:59.604Z',
-    '2020-05-27T17:01:17.194Z',
-    '2020-07-11T23:36:17.929Z',
-    '2020-07-12T10:51:36.790Z',
+    '2021-11-18T21:31:17.178Z',
+    '2021-12-23T07:42:02.383Z',
+    '2022-01-28T09:15:04.904Z',
+    '2022-04-01T10:17:24.185Z',
+    '2022-05-08T14:11:59.604Z',
+    '2022-05-27T17:01:17.194Z',
+    '2022-08-26T00:00:00.929Z',
+    '2022-08-28T04:51:36.790Z',
   ],
   currency: 'EUR',
   locale: 'pt-PT', // de-DE
@@ -36,14 +36,14 @@ const account2 = {
   pin: 2222,
 
   movementsDates: [
-    '2019-11-01T13:15:33.035Z',
-    '2019-11-30T09:48:16.867Z',
-    '2019-12-25T06:04:23.907Z',
-    '2020-01-25T14:18:46.235Z',
-    '2020-02-05T16:33:06.386Z',
-    '2020-04-10T14:43:26.374Z',
-    '2020-06-25T18:49:59.371Z',
-    '2020-07-26T12:01:20.894Z',
+    '2021-11-01T13:15:33.035Z',
+    '2021-11-30T09:48:16.867Z',
+    '2021-12-25T06:04:23.907Z',
+    '2022-01-25T14:18:46.235Z',
+    '2022-02-05T16:33:06.386Z',
+    '2022-04-10T14:43:26.374Z',
+    '2022-06-25T18:49:59.371Z',
+    '2022-07-26T12:01:20.894Z',
   ],
   currency: 'USD',
   locale: 'en-US',
@@ -77,7 +77,10 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayMovements = function (movements, sort = false) {
+const displayMovements = function (
+  { movements, movementsDates },
+  sort = false
+) {
   containerMovements.replaceChildren(); // removes existing children, also we could add elements if we want that
 
   // while (containerMovements.firstChild) {
@@ -88,6 +91,29 @@ const displayMovements = function (movements, sort = false) {
 
   // sort
   const movs = sort ? [...movements].sort((a, b) => a - b) : movements; // SOLVE ascending because, it will be reversed by the end, so basically we were inserting all the elements at the start of the container, that's why
+  const getDateMovements = function (i) {
+    const date = new Date(movementsDates[i]);
+    const t = Date.now() - Date.parse(date);
+    console.log(movementsDates[i]);
+    console.log(Date.now());
+    console.log(Date.parse(date));
+    console.log(Math.floor(t / (1000 * 60 * 60 * 24)));
+
+    if (Math.floor(t / (1000 * 60 * 60 * 24)) === 0) {
+      return `${`${new Date(t).getHours()}`.padStart(2, '0')} hours ago`;
+    }
+
+    if (
+      Math.floor(t / (1000 * 60 * 60 * 24)) > 0 &&
+      Math.floor(t / (1000 * 60 * 60 * 24)) < 3
+    ) {
+      return `${new Date(t).getDate()} days ago`;
+    }
+
+    return `As of ${`${date.getDate()}`.padStart(2, '0')}\/${`${
+      date.getMonth() + 1
+    }`.padStart(2, '0')}\/${date.getFullYear()}`;
+  };
 
   movs.forEach((move, i) => {
     // https://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript?noredirect=1&lq=1
@@ -99,6 +125,7 @@ const displayMovements = function (movements, sort = false) {
           <div class="movements__type movements__type--${type}">
             ${i + 1} ${type}
            </div>
+          <div class="movements__date">${getDateMovements(i)}</div>
           <div class="movements__value">${move.toFixed(2)} EUR</div>
         </div>
     `;
@@ -178,7 +205,7 @@ const clearFields = function (input1, input2) {
 
 const updateUI = function (acc) {
   // Display movements
-  displayMovements(acc.movements);
+  displayMovements(acc);
 
   // Display balance
   calcDisplayBalance(acc);
@@ -188,6 +215,28 @@ const updateUI = function (acc) {
 };
 
 let currentAccount;
+
+// FAKE ALWAYS LOGGED IN
+currentAccount = account1;
+updateUI(currentAccount);
+
+labelWelcome.textContent = `Welcome back, ${
+  currentAccount.owner.split(' ')[0]
+}!`;
+containerApp.style.opacity = 1;
+containerApp.style.visibility = 'visible';
+
+const now = new Date();
+
+// getMonth() - is zeroBased
+// getDay() - also zeroBased, sunday is zero
+
+labelDate.textContent = `${`${now.getDate()}`.padStart(2, '0')}\\${`${
+  now.getMonth() + 1
+}`.padStart(2, '0')}\\${now.getFullYear()}, ${`${now.getHours()}`.padStart(
+  2,
+  '0'
+)}:${`${now.getMinutes()}`.padStart(2, '0')}`;
 
 // Event Handler
 btnLogin.addEventListener('click', e => {
@@ -299,7 +348,7 @@ let sorted = false;
 btnSort.addEventListener('click', e => {
   e.preventDefault();
 
-  displayMovements(currentAccount.movements, (sorted = !sorted));
+  displayMovements(currentAccount, (sorted = !sorted));
 });
 
 /////////////////////////////////////////////////
@@ -519,6 +568,7 @@ console.log(new Date(3 * 24 * 60 * 60 * 1000)); // 3 days * 24 hours * 60 minute
 // 3 * 24 * 60 * 60 * 1000 = 259200000 is a timestamp
 */
 
+/*
 // Working with dates
 const future = new Date(2037, 10, 19, 15, 23);
 console.log(future);
@@ -548,3 +598,4 @@ console.log(new Date(Date.now()));
 // set verions
 future.setFullYear(2040);
 console.log(future);
+*/
