@@ -22,8 +22,8 @@ const account1 = {
     '2022-04-01T10:17:24.185Z',
     '2022-05-08T14:11:59.604Z',
     '2022-05-27T17:01:17.194Z',
-    '2022-08-26T00:00:00.929Z',
-    '2022-08-28T04:51:36.790Z',
+    '2022-08-24T00:00:00.929Z',
+    '2022-08-28T05:38:36.790Z',
   ],
   currency: 'EUR',
   locale: 'pt-PT', // de-DE
@@ -77,10 +77,34 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayMovements = function (
-  { movements, movementsDates },
-  sort = false
-) {
+const formatMovementDate = function (i) {
+  const date = new Date(this.movementsDates[i]);
+
+  const calcDaysPassed = (date1, date2) =>
+    Math.round(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24));
+
+  const daysPassed = calcDaysPassed(Date.now(), date);
+
+  if (daysPassed === 0) return `Today`;
+  if (daysPassed === 1) return `Yesterday`;
+  if (daysPassed <= 7) return `${daysPassed} days ago`;
+
+  // return `As of ${`${date.getDate()}`.padStart(2, '0')}/${`${
+  //   date.getMonth() + 1
+  // }`.padStart(2, '0')}/${date.getFullYear()}`;
+
+  return new Intl.DateTimeFormat(this.locale).format(date);
+};
+
+const formatCur = function (value, locale, currency) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+  }).format(value);
+};
+
+const displayMovements = function (acc, sort = false) {
+  const { movements, locale, currency } = acc;
   containerMovements.replaceChildren(); // removes existing children, also we could add elements if we want that
 
   // while (containerMovements.firstChild) {
@@ -91,42 +115,21 @@ const displayMovements = function (
 
   // sort
   const movs = sort ? [...movements].sort((a, b) => a - b) : movements; // SOLVE ascending because, it will be reversed by the end, so basically we were inserting all the elements at the start of the container, that's why
-  const getDateMovements = function (i) {
-    const date = new Date(movementsDates[i]);
-    const t = Date.now() - Date.parse(date);
-    console.log(movementsDates[i]);
-    console.log(Date.now());
-    console.log(Date.parse(date));
-    console.log(Math.floor(t / (1000 * 60 * 60 * 24)));
-
-    if (Math.floor(t / (1000 * 60 * 60 * 24)) === 0) {
-      return `${`${new Date(t).getHours()}`.padStart(2, '0')} hours ago`;
-    }
-
-    if (
-      Math.floor(t / (1000 * 60 * 60 * 24)) > 0 &&
-      Math.floor(t / (1000 * 60 * 60 * 24)) < 3
-    ) {
-      return `${new Date(t).getDate()} days ago`;
-    }
-
-    return `As of ${`${date.getDate()}`.padStart(2, '0')}\/${`${
-      date.getMonth() + 1
-    }`.padStart(2, '0')}\/${date.getFullYear()}`;
-  };
 
   movs.forEach((move, i) => {
     // https://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript?noredirect=1&lq=1
     // https://stackoverflow.com/questions/4991098/replacing-all-children-of-an-htmlelement
     const type = move > 0 ? `deposit` : `withdrawal`;
 
+    const formattedMov = formatCur(move, locale, currency);
+
     const html = `
         <div class="movements__row">
           <div class="movements__type movements__type--${type}">
             ${i + 1} ${type}
            </div>
-          <div class="movements__date">${getDateMovements(i)}</div>
-          <div class="movements__value">${move.toFixed(2)} EUR</div>
+          <div class="movements__date">${formatMovementDate.call(acc, i)}</div>
+          <div class="movements__value">${formattedMov}</div>
         </div>
     `;
 
@@ -138,28 +141,38 @@ const calcDisplayBalance = function (acc) {
   // https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
   // Object.defineProperty
   acc.balance = acc.movements.reduce((acc, currentValue) => acc + currentValue);
-
   // while (labelBalance.firstChild) {
   //   labelBalance.removeChild(labelBalance.lastChild);
   // }
 
-  labelBalance.textContent = `${acc.balance.toFixed(2)} EUR`;
+  labelBalance.textContent = `${formatCur(
+    acc.balance,
+    acc.locale,
+    acc.currency
+  )}`;
 };
 
-const calcDisplaySummary = function ({ movements, interestRate }) {
+const calcDisplaySummary = function ({
+  movements,
+  interestRate,
+  locale,
+  currency,
+}) {
   const incomes = movements
     .filter(mov => mov > 0)
     .reduce((deposit, mov) => deposit + mov, 0)
     .toFixed(2);
 
-  labelSumIn.textContent = `${incomes} EUR`;
+  labelSumIn.textContent = `${formatCur(incomes, locale, currency)}`;
 
-  const outcomes = movements
-    .filter(mov => mov < 0)
-    .reduce((acc, mov) => acc + mov, 0)
-    .toFixed(2);
+  const outcomes = Math.abs(
+    movements
+      .filter(mov => mov < 0)
+      .reduce((acc, mov) => acc + mov, 0)
+      .toFixed(2)
+  );
 
-  labelSumOut.textContent = `${Math.abs(outcomes)} EUR`;
+  labelSumOut.textContent = `${formatCur(outcomes, locale, currency)}`;
 
   const interest = movements
     .filter(mov => mov > 0)
@@ -170,7 +183,7 @@ const calcDisplaySummary = function ({ movements, interestRate }) {
     .reduce((acc, int) => acc + int, 0)
     .toFixed(2);
 
-  labelSumInterest.textContent = `${interest} EUR`;
+  labelSumInterest.textContent = `${formatCur(interest, locale, currency)}`;
 };
 
 // each function should actually receive the data that it should work with, instead of using a global variable
@@ -216,28 +229,6 @@ const updateUI = function (acc) {
 
 let currentAccount;
 
-// FAKE ALWAYS LOGGED IN
-currentAccount = account1;
-updateUI(currentAccount);
-
-labelWelcome.textContent = `Welcome back, ${
-  currentAccount.owner.split(' ')[0]
-}!`;
-containerApp.style.opacity = 1;
-containerApp.style.visibility = 'visible';
-
-const now = new Date();
-
-// getMonth() - is zeroBased
-// getDay() - also zeroBased, sunday is zero
-
-labelDate.textContent = `${`${now.getDate()}`.padStart(2, '0')}\\${`${
-  now.getMonth() + 1
-}`.padStart(2, '0')}\\${now.getFullYear()}, ${`${now.getHours()}`.padStart(
-  2,
-  '0'
-)}:${`${now.getMinutes()}`.padStart(2, '0')}`;
-
 // Event Handler
 btnLogin.addEventListener('click', e => {
   e.preventDefault();
@@ -260,6 +251,32 @@ btnLogin.addEventListener('click', e => {
     }!`;
     containerApp.style.opacity = 1;
     containerApp.style.visibility = 'visible';
+
+    // http://www.lingoes.net/en/translator/langcode.htm
+    // Experimenting with API
+    const now = new Date();
+    // 2-digit, numeric, long, short, narrow
+    const options = {
+      hour: 'numeric',
+      minute: 'numeric',
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+      // weekday: 'long',
+    };
+
+    // const locale = navigator.language;
+    // console.log(locale);
+
+    labelDate.textContent = new Intl.DateTimeFormat(
+      currentAccount.locale,
+      options
+    ).format(now);
+
+    /*
+      // // getMonth() - is zeroBased
+      // // getDay() - also zeroBased, sunday is zero
+    */
 
     updateUI(currentAccount);
     clearFields(inputLoginUsername, inputLoginPin);
@@ -286,6 +303,11 @@ btnTransfer.addEventListener('click', e => {
     currentAccount.movements.push(-amount);
     receiverAcc.movements.push(amount);
 
+    // Add transfer date
+    // in real world application, we would probably have an object for each movement and so that object would then contain the amount, the date and some other information about the movement
+    currentAccount.movementsDates.push(new Date().toISOString());
+    receiverAcc.movementsDates.push(new Date().toISOString());
+
     updateUI(currentAccount);
     clearFields(inputTransferAmount, inputTransferTo);
   } else {
@@ -305,6 +327,9 @@ btnLoan.addEventListener('click', e => {
   if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
     // add movement
     currentAccount.movements.push(amount);
+
+    // Add transfer date
+    currentAccount.movementsDates.push(new Date().toISOString());
 
     // Update UI
     updateUI(currentAccount);
@@ -599,3 +624,60 @@ console.log(new Date(Date.now()));
 future.setFullYear(2040);
 console.log(future);
 */
+
+/*
+//////////////////////////////////////////////////////////////////
+// Operations With Dates
+
+const future = new Date(2037, 10, 19, 15, 23);
+console.log(+future - Date.now());
+
+const calcDaysPassed = (date1, date2) =>
+  Math.round(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24)); // 24 hours in a day, there are 60 minutes in one hour, 60 seconds in one minute and 1000 milliseconds in one second
+
+const days1 = calcDaysPassed(
+  new Date(2037, 3, 14),
+  new Date(2037, 3, 24, 10, 8)
+);
+console.log(days1);
+
+// moment.js for precise calculations for example, including time changes due to daylight saving changes and other weird edge cases
+*/
+
+/*
+////////////////////////////////////////////////////////////////////
+// Internationalizing Numbers (Intl)
+
+const num = 2213233412.23;
+
+// unit: mile-per-hour, celsius
+// style: unit, percent, currency
+const options = {
+  style: 'currency',
+  unit: 'celsius',
+  currency: 'EUR',
+  // useGrouping: false, // without separators
+};
+
+console.log('US: ', new Intl.NumberFormat('en-US', options).format(num));
+console.log('Germany: ', new Intl.NumberFormat('de-DE', options).format(num));
+console.log('Syria: ', new Intl.NumberFormat('ar-SY', options).format(num));
+console.log(
+  navigator.language,
+  new Intl.NumberFormat(navigator.language, options).format(num)
+);
+*/
+
+//////////////////////////////////////////////////////////////////////////
+// Timers _setTimeout and setInterval
+
+const ingredients = ['olives', 'spinach'];
+
+setTimeout(
+  (ing1, ing2) =>
+    console.log(`Here is your pizza! Some ingredients: ${ing1}, ${ing2};`),
+  3000,
+  ...ingredients
+);
+
+console.log('Waiting...');
