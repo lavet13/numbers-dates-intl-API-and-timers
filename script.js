@@ -169,6 +169,7 @@ const calcDisplayBalance = function (acc) {
     acc.balance = acc.movements.reduce(
         (acc, currentValue) => acc + currentValue
     );
+
     // while (labelBalance.firstChild) {
     //   labelBalance.removeChild(labelBalance.lastChild);
     // }
@@ -437,6 +438,8 @@ btnClose.addEventListener('click', e => {
 
         // reset welcome
         labelWelcome.textContent = 'Log in to get started';
+
+        if (timer) clearInterval(timer);
     } else {
         console.log('incorrect input');
     }
@@ -664,7 +667,7 @@ console.log(new Date(account1.movementsDates[0])); // Z means the UTC(Universal 
 console.log(new Date(2037, 10, 19, 15, 23, 5));
 console.log(new Date(2037, 10, 30));
 
-console.log(new Date(0)); // Unit time which is January 1st, 1970
+console.log(new Date(0)); // Unix time which is January 1st, 1970
 console.log(new Date(3 * 24 * 60 * 60 * 1000)); // 3 days * 24 hours * 60 minutes * 60 seconds * 1000 milliseconds
 // 3 * 24 * 60 * 60 * 1000 = 259200000 is a timestamp
 */
