@@ -468,7 +468,7 @@ console.log(23 === 23.0);
 // Binary base 2 - 0 to 1
 
 console.log(0.1 + 0.2);
-console.log(0.1 + 0.2 === 0.3);
+console.log(0.1 + 0.2 === 0.3); // false
 
 // Conversion
 console.log(Number('23'));
@@ -487,7 +487,7 @@ console.log(Number.parseFloat('2.5rem')); // 2.5
 console.log(Number.isNaN(20)); // false
 console.log(Number.isNaN('20')); // false
 console.log(Number.isNaN(+'20X')); // true
-console.log(Number.isNaN(23 / 0)); // Infinity, which is false
+console.log(Number.isNaN(23 / 0)); // Infinity, which is false, and that's not good because it has to be true
 
 // Checking if value is a number, not a string
 console.log(Number.isFinite(20)); // true
@@ -517,19 +517,19 @@ console.log(8 ** (1 / 3)); // 2
 // max
 console.log(Math.max(5, 18, 23, 11, 2));
 console.log(Math.max(5, 18, '23', 11, 2)); // still give us 23, it will do type coercion
-console.log(Math.max(5, 18, '23px', 11, 2)); // it doesn't parsing, NaN
+console.log(Math.max(5, 18, '23px', 11, 2)); // NaN is returned 
 
 // min
 console.log(Math.min(5, 18, 23, 11, 2));
 
-// calculation the radius of a circle
+// ???
 console.log(Math.PI * Number.parseFloat('10px') ** 2);
 
 // random
-console.log(Math.trunc(Math.random() * 6) + 1); // plus one to offset that truncation, so that cut off the decimal part
+console.log(Math.floor(Math.random() * 6) + 1); // plus one to offset that truncation, so that cut off the decimal part
 
 const randomInt = (min, max) =>
-  Math.floor(Math.random() * (max - min) + 1) + min;
+  Math.floor(Math.random() * (max - min + 1)) + min; // (min, max) - order + (max - min + 1)
 // 0...1 -> 0...(max - min) -> min...(max - min + min) -> min...max
 
 // Rounding integers
@@ -588,7 +588,7 @@ console.log(rowsFrom); // [undefined, undefined], because of the mapping functio
 
 // nth time
 labelBalance.addEventListener('click', () => {
-  [...document.querySelectorAll('.movements__row')].forEach((row, i) => {
+  document.querySelectorAll('.movements__row').forEach((row, i) => {
     if ((i + 1) % 2 === 0) row.style.backgroundColor = 'orangered';
     if ((i + 1) % 3 === 0) row.style.backgroundColor = 'yellow';
   });
@@ -641,7 +641,7 @@ console.log(huge * BigInt(num)); // we must explicitly convert Number to BigInt 
 
 console.log(20n > 15); // works as expected
 console.log(20n === 20); // doesn't do type coercion, so false is returned
-console.log(typeof 20n);
+console.log(typeof 20n); // bigint
 console.log(20n == '20'); // type coercion, so true is expected
 
 console.log(huge + 'is REALLY big!!'); // converted a big int to a string successfully
@@ -704,7 +704,7 @@ console.log(new Date(Date.now()));
 // minutes - t / (1000 * 60) % 60
 // seconds - t / (1000) %  60
 
-// set verions
+// set versions
 future.setFullYear(2040);
 console.log(future);
 */
@@ -734,6 +734,7 @@ console.log(days1);
 
   // 2-digit, numeric, long, short, narrow
   // http://www.lingoes.net/en/translator/langcode.htm
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
 
 console.log(
   Intl.DateTimeFormat(navigator.language, {
@@ -763,6 +764,7 @@ console.log(
 // minute - numeric, 2-digit
 // second - numeric, 2-digit
 // fractionalSecondDigits - 0 (fractional part dropped), 1(represented as 1 digits), 2(as 2 digits), 3(as 3 digits)
+// timeZoneName - long, short, shortOffset, longOffset, shortGeneric, longGeneric
 
 console.log(
   Intl.DateTimeFormat(navigator.language, {
