@@ -122,11 +122,13 @@ const displayMovements = function (acc, sort = false) {
     movs.forEach((move, i) => {
         // https://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript?noredirect=1&lq=1
         // https://stackoverflow.com/questions/4991098/replacing-all-children-of-an-htmlelement
+
         let type, formattedMov, html;
         if (!Array.isArray(move)) {
             type = move > 0 ? `deposit` : `withdrawal`;
 
             formattedMov = formatCur(move, locale, currency);
+
             html = `
           <div class="movements__row">
             <div class="movements__type movements__type--${type}">
@@ -166,8 +168,10 @@ const displayMovements = function (acc, sort = false) {
 const calcDisplayBalance = function (acc) {
     // https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
     // Object.defineProperty
+
     acc.balance = acc.movements.reduce(
-        (acc, currentValue) => acc + currentValue
+        (acc, currentValue) => acc + currentValue,
+        0
     );
 
     // while (labelBalance.firstChild) {
@@ -191,7 +195,6 @@ const calcDisplaySummary = function ({
         .filter(mov => mov > 0)
         .reduce((deposit, mov) => deposit + mov, 0)
         .toFixed(2);
-
     labelSumIn.textContent = `${formatCur(incomes, locale, currency)}`;
 
     const outcomes = Math.abs(
@@ -200,7 +203,6 @@ const calcDisplaySummary = function ({
             .reduce((acc, mov) => acc + mov, 0)
             .toFixed(2)
     );
-
     labelSumOut.textContent = `${formatCur(outcomes, locale, currency)}`;
 
     const interest = movements
@@ -211,7 +213,6 @@ const calcDisplaySummary = function ({
         })
         .reduce((acc, int) => acc + int, 0)
         .toFixed(2);
-
     labelSumInterest.textContent = `${formatCur(interest, locale, currency)}`;
 };
 
@@ -260,6 +261,7 @@ const updateUI = function (acc) {
 const startLogOutTimer = function (timeLeft = 60 * 5) {
     // Set time to 5 minutes
     let time = timeLeft;
+    if (time < 0) time = 60 * 5;
 
     const tick = function () {
         const minutes = String(Math.floor(time / 60)).padStart(2, 0);
@@ -344,7 +346,7 @@ btnLogin.addEventListener('click', e => {
         clearFields(inputLoginUsername, inputLoginPin);
 
         // Timer
-        if (timer) clearInterval(timer);
+        timer && clearInterval(timer);
         timer = startLogOutTimer();
     }
 
@@ -376,7 +378,7 @@ btnTransfer.addEventListener('click', e => {
 
         updateUI(currentAccount);
         clearFields(inputTransferAmount, inputTransferTo);
-        if (timer) clearInterval(timer);
+        timer && clearInterval(timer);
         timer = startLogOutTimer();
     } else {
         console.log(
@@ -389,6 +391,7 @@ btnTransfer.addEventListener('click', e => {
 
 btnLoan.addEventListener('click', e => {
     e.preventDefault();
+
     const amount = Math.floor(inputLoanAmount.value);
 
     // at least one of the elements in the movements array has this condition
@@ -403,7 +406,7 @@ btnLoan.addEventListener('click', e => {
             currentAccount?.movementsDates.push(new Date().toISOString());
 
             // Update UI
-            if (currentAccount) updateUI(currentAccount);
+            currentAccount && updateUI(currentAccount);
         }, 3000);
         clearFields(inputLoanAmount);
 
@@ -695,7 +698,7 @@ console.log(new Date(Date.now()));
 // (Date.now() - (Date.now() - (24 * 60 * 60 * 1000))) / (1000 * 60 * 60 * 24) -> so basically we computed today's day - yesterday's day and have been got back that with milliseconds which was essentailly converted to 1 day by formula t / 1000 / 60 / 60 / 24 or  t / (1000 * 60 * 60 * 24)
 
 // SOLVE yesterday
-// new Date( new Date() - (new Date() - (new Date() - (1000 * 60 * 60 * 24))));
+// new Date( new Date() - (new Date() - (new Date() - (1000 * 60 * 60 * 24)))); // ??????
 // new Date(Date.now() - new Date(1000 * 60 * 60 * 24)) // (new Date() - (new Date() - (1000 * 60 * 60 * 24))) and new Date(1000 * 60 * 60 * 24) are identically equal by all means
 
 
