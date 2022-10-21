@@ -532,7 +532,7 @@ console.log(Math.PI * Number.parseFloat('10px') ** 2);
 console.log(Math.floor(Math.random() * 6) + 1); // plus one to offset that truncation, so that cut off the decimal part
 
 const randomInt = (min, max) =>
-  Math.floor(Math.random() * (max - min + 1)) + min; // (min, max) - order + (max - min + 1)
+  Math.floor(Math.random() * (max - min + 1)) + min; // (max - min + 1)
 // 0...1 -> 0...(max - min) -> min...(max - min + min) -> min...max
 
 // Rounding integers
